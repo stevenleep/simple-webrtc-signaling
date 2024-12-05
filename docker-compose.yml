@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  webrtc-signaling:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=meeting-signaling-redis
+    networks:
+      - webrtc-network
+    depends_on:
+      - redis
+
+  redis:
+    build:
+      context: ./redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - webrtc-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+networks:
+  webrtc-network:
+    driver: bridge
+
+volumes:
+  redis-data: 

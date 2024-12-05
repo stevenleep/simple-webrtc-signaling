@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meeting-signaling-demo</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>meeting-signaling-demo</h1>
+      <p>Is connect: {{ roadmap.isConnect ? "connected" : "connecting..." }}</p>
+
+      <div class="user-list">
+        <h2>新加入用户列表</h2>
+        <ul>
+          <li
+            style="padding: 12px"
+            v-for="user in roadmap.userLists"
+            @click="() => startVoiceAndVideo('2002',user)"
+          >
+            {{ user }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
+
+  <script type="module">
+    import { io } from "https://cdn.socket.io/4.8.1/socket.io.esm.min.js";
+    import {
+      createApp,
+      ref,
+      reactive,
+    } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+    const socket = io("http://localhost:3000");
+
+    const app = createApp({
+      setup() {
+        const roomId = "2002";
+        let cacheUser = "";
+
+        const roadmap = reactive({
+          isConnect: false,
+          userLists: [],
+        });
+
+        socket.on("connect", () => {
+          roadmap.isConnect = true;
+          socket.emit(
+            "join-room",
+            "2002",
+            "user" + Math.floor(Math.random() * 1000)
+          );
+        });
+
+        socket.on("user-connected", (data) => {
+          roadmap.userLists.push(data);
+        });
+
+        socket.on("room-users", (data) => {
+          roadmap.userLists = data;
+        });
+
+        socket.on("disconnect", () => {
+          roadmap.isConnect = false;
+        });
+
+        const peerConnection = new RTCPeerConnection();
+        const mediaStream = new MediaStream();
+
+        peerConnection.ontrack = (event) => {
+          mediaStream.addTrack(event.track);
+        };
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate", roomId, cacheUser, event.candidate);
+          }
+        };
+
+        peerConnection.onnegotiationneeded = async () => {
+          if (!cacheUser) {
+            return;
+          }
+          const sdp = await peerConnection.createOffer();
+          await peerConnection.setLocalDescription(sdp);
+          socket.emit("offer", roomId, cacheUser, sdp);
+        };
+
+        socket.on("offer", async (data) => {
+          if (!data.userId) {
+            return;
+          }
+          await peerConnection.setRemoteDescription(data.offer);
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          socket.emit("answer", roomId, data.userId, answer);
+        });
+
+        socket.on("answer", async (data) => {
+          if (!data.userId) {
+            return;
+          }
+          await peerConnection.setRemoteDescription(data.answer);
+        });
+
+        socket.on("ice-candidate", async (data) => {
+          if (!data.userId || !data.candidate) {
+            return;
+          }
+          await peerConnection.addIceCandidate(data.candidate);
+        });
+
+        const startVoiceAndVideo = async (roomId, user) => {
+          cacheUser = user;
+          const localStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+          });
+        };
+
+        return {
+          roadmap,
+          startVoiceAndVideo,
+        };
+      },
+    });
+
+    app.mount("#app");
+  </script>
+</html>
