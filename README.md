@@ -1,8 +1,10 @@
 # simple-webrtc-signaling
 This is a basic WebRTC signaling implementation. It empowers real-time communication between web browsers, facilitating direct data exchange (e.g., video, audio) without intermediary servers handling the media stream.
 ![image](https://github.com/user-attachments/assets/762fc121-5b3f-45ef-b01c-b28a689d660a)
-
 ![image](https://github.com/user-attachments/assets/94ea9d5d-ae87-439d-a3a9-aa59e67f16af)
+
+## Flow
+![image](https://github.com/user-attachments/assets/6fbb2d29-f0ed-4c25-80ae-4b1fc2612d1c)
 
 
 ## Technology Stack
