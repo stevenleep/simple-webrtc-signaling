@@ -3,10 +3,6 @@ This is a basic WebRTC signaling implementation. It empowers real-time communica
 ![image](https://github.com/user-attachments/assets/762fc121-5b3f-45ef-b01c-b28a689d660a)
 ![image](https://github.com/user-attachments/assets/94ea9d5d-ae87-439d-a3a9-aa59e67f16af)
 
-## Flow
-![image](https://github.com/user-attachments/assets/6fbb2d29-f0ed-4c25-80ae-4b1fc2612d1c)
-
-
 ## Technology Stack
 - NodeJS:
   - NodeJS provides a server - side runtime environment that is event - driven and non - blocking. This architecture is highly efficient for handling multiple concurrent connections, which is crucial in a real - time communication context. It allows the server to handle many signaling requests from different clients simultaneously without getting blocked, enabling a smooth and responsive communication experience.
